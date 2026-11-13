@@ -33,6 +33,7 @@ resource "github_repository" "github_governance" {
       security_and_analysis,
       pages,
       vulnerability_alerts,
+      ignore_vulnerability_alerts_during_read,
     ]
   }
 }
