@@ -22,4 +22,4 @@ Resolve tensions using correctness, understandability, and the requested outcome
 
 ## Repository-Specific Guidance
 
-This pilot previews Terraform management of github-governance visibility and four merge settings only. Preserve the lifecycle exclusions for unrelated repository attributes. Do not run terraform import or terraform apply without explicit approval; an import block is a proposal until applied. Do not commit state, saved plans, credentials, or provider binaries. Use the README's two plan commands and inspect all proposed actions. Select persistent state storage before any approved import or apply.
+This repository provisions Land Foundry repositories from repository-template and manages public visibility plus four merge settings. Preserve unrelated settings during adoption. Existing repositories require from_template=false and a reviewed import mapping. Do not run terraform import or terraform apply without explicit approval. Do not commit state, plans, credentials, or provider binaries. Validate formatting, configuration, and plan actions. Select persistent state storage before an approved apply.

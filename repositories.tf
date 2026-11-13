@@ -1,18 +1,31 @@
-resource "github_repository" "github_governance" {
-  name = "github-governance"
+resource "github_repository" "managed" {
+  for_each = var.repositories
 
-  visibility             = var.repository_settings.visibility
-  allow_merge_commit     = var.repository_settings.allow_merge_commit
-  allow_squash_merge     = var.repository_settings.allow_squash_merge
-  allow_rebase_merge     = var.repository_settings.allow_rebase_merge
-  delete_branch_on_merge = var.repository_settings.delete_branch_on_merge
+  name        = each.key
+  description = each.value.description
+
+  visibility             = "public"
+  allow_merge_commit     = true
+  allow_squash_merge     = false
+  allow_rebase_merge     = false
+  delete_branch_on_merge = true
+
+  dynamic "template" {
+    for_each = each.value.from_template ? [true] : []
+    content {
+      owner                = "land-foundry"
+      repository           = "repository-template"
+      include_all_branches = false
+    }
+  }
 
   lifecycle {
     prevent_destroy = true
 
-    # Limit this pilot to visibility and the four merge settings.
+    # Set initial creation values; preserve unrelated settings after adoption.
     ignore_changes = [
       description,
+      template,
       homepage_url,
       has_issues,
       has_discussions,

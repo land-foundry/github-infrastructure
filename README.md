@@ -1,51 +1,62 @@
 # Land Foundry GitHub Infrastructure
 
-A minimal Terraform pilot for five settings on the existing `land-foundry/github-governance` repository.
-
-| Setting | Desired |
-|---|---|
-| visibility | public |
-| allow_merge_commit | true |
-| allow_squash_merge | false |
-| allow_rebase_merge | false |
-| delete_branch_on_merge | true |
+Create repositories from `land-foundry/repository-template` with public visibility, merge commits enabled, squash and rebase merging disabled, and automatic branch deletion after merge.
 
 ## Prepare
 
-Use Terraform 1.13.5 and the locked integrations/github 6.13.0 provider. These are explicit pilot pins, not claims of latest versions. No modules, CI apply workflow, or organization rulesets are included.
-
-Authenticated reads are required: anonymous GitHub responses omit merge-method settings and can produce misleading plans. Renew the GitHub CLI sign-in or supply credentials through the environment; never commit them. The Codex connector's credentials are not available to Terraform. A later apply will require suitable repository administration permissions. With GitHub App authentication, this provider also requires contents:write for reliable merge-setting reads.
-
-## Review without importing or applying
-
-From this directory:
+Use Terraform 1.13.5 and integrations/github 6.13.0 with the committed provider lock file. Authenticate through GitHub CLI or environment credentials; never commit credentials. Anonymous reads omit merge settings and cannot support reliable plans. Applying later requires appropriate repository permissions; App authentication also requires contents:write for merge-setting reads.
 
 ```text
 terraform init -input=false
 terraform fmt -check -recursive
 terraform validate
-terraform plan -input=false "-var-file=preview/import-only.tfvars" "-out=import.tfplan"
-terraform show -no-color import.tfplan
-terraform plan -input=false "-out=settings.tfplan"
-terraform show -no-color settings.tfplan
 ```
 
-The first plan uses the observed current values to preview import only: expect one import and no changes. Refresh the snapshot in preview/import-only.tfvars if live settings change. The second uses the proposed desired settings: expect one import and only the permitted in-place updates. Both start from the same empty state; neither imports anything into persistent state or applies repository changes.
+## Create repositories
 
-The import target is github_repository.github_governance with GitHub ID github-governance under provider owner land-foundry. Verify the planned full_name is land-foundry/github-governance. Public visibility and merge commits may already match the target and then produce no changes.
+Each key in the repositories input is a name in Land Foundry. The optional description is set at creation. from_template defaults to true, copying only the default branch of repository-template, including its pinned AGENTS.md and repository-specific guidance section.
 
-Stop for review if either plan proposes creation, replacement, destruction, a different repository, or updates outside the five settings. The resource's ignore_changes list leaves unrelated settings outside this pilot; prevent_destroy guards against planned destruction while the resource remains configured.
+```text
+terraform plan -input=false "-var-file=examples/create.tfvars" "-out=create.tfplan"
+terraform show -no-color create.tfplan
+```
 
-Confirm the plan's observed merge-method settings against an authenticated GitHub read. An import-only preview with unexpected setting changes is not a valid baseline; resolve missing permissions or stale observations before proceeding.
+[examples/create.tfvars](examples/create.tfvars) uses repository-provisioning-preview as a plan-only name. Replace it with the intended name before proposing a real creation. From empty state, expect one create and no changes or destruction. The default configuration has no import block.
 
-## Approval boundary
+Template contents are copied at creation time; later template changes do not update existing repositories. Review the template before an approved creation and customize project guidance afterward.
 
-Do not run terraform import or terraform apply yet. Applying a saved plan can both import the repository into state and update settings. Review and approval of the configuration PR is not approval to apply.
+## Update existing repositories
 
-This preview uses local state only. State files and saved plans are ignored. Before any approved import or apply, choose persistent state storage and locking, arrange authenticated access, refresh the plan, and obtain explicit approval. Do not commit plans or state; they can contain sensitive values. No remote backend is provisioned by this pilot.
+Set from_template=false for an existing repository, as in [examples/existing.tfvars](examples/existing.tfvars). Adopt it through an explicit reviewed import mapping. This updates settings without replacing its files.
+
+For a preview only, create an ignored local adoption.local.tf containing:
+
+```hcl
+import {
+  to = github_repository.managed["github-governance"]
+  id = "github-governance"
+}
+```
+
+```text
+terraform plan -input=false "-var-file=examples/existing.tfvars" "-out=existing.tfplan"
+terraform show -no-color existing.tfplan
+```
+
+Expect an import and only necessary in-place settings updates. Stop if Terraform proposes creating an already-existing repository. The import block is only a proposal until applied; no terraform import command is needed for this preview. Remove the local import block before returning to the creation example.
+
+Descriptions, template configuration, and unrelated settings are ignored for updates. Visibility is managed: adopting a private repository proposes making it public and requires explicit review. This configuration does not automatically discover or adopt existing repositories.
+
+## State and approval
+
+Supply the complete inventory for each Terraform state on every run. After adoption, retain existing entries when adding a repository; do not alternate these standalone examples against populated state. Removing or renaming a key can propose destruction. prevent_destroy blocks planned destruction while the resource remains configured.
+
+The examples are separate previews from empty local state. Select persistent state storage and locking before an approved apply. State, saved plans, provider binaries, and credentials must stay out of Git.
+
+Stop after plan review. Do not run terraform apply or terraform import without explicit authorization. A creation apply creates repositories; an adoption apply can both persist imports and update settings. PR approval is not apply approval. Refresh and review the plan before an authorized apply.
 
 ## References
 
 - [GitHub repository resource](https://registry.terraform.io/providers/integrations/github/6.13.0/docs/resources/repository)
 - [Terraform import blocks](https://developer.hashicorp.com/terraform/language/import)
-- [Merge decision ADR-002](https://github.com/land-foundry/github-governance/blob/main/docs/adr/002-merge-commits.md)
+- [ADR-002](https://github.com/land-foundry/github-governance/blob/main/docs/adr/002-merge-commits.md)
