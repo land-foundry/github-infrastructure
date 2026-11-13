@@ -55,6 +55,10 @@ The examples are separate previews from empty local state. Select persistent sta
 
 Stop after plan review. Do not run terraform apply or terraform import without explicit authorization. A creation apply creates repositories; an adoption apply can both persist imports and update settings. PR approval is not apply approval. Refresh and review the plan before an authorized apply.
 
+## Architecture Decisions
+
+- [ADR-001: Use Terraform for GitHub repository provisioning](docs/adr/001-terraform-repository-provisioning.md)
+
 ## References
 
 - [GitHub repository resource](https://registry.terraform.io/providers/integrations/github/6.13.0/docs/resources/repository)
