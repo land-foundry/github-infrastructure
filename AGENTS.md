@@ -22,4 +22,4 @@ Resolve tensions using correctness, understandability, and the requested outcome
 
 ## Repository-Specific Guidance
 
-This repository provisions Land Foundry repositories from repository-template and manages public visibility plus four merge settings. Preserve unrelated settings during adoption. Existing repositories require from_template=false and a reviewed import mapping. Do not run terraform import or terraform apply without explicit approval. Do not commit state, plans, credentials, or provider binaries. Validate formatting, configuration, and plan actions. Select persistent state storage before an approved apply.
+This repository is retired after consolidation into land-foundry/platform-infrastructure under github/. Read README.md for the destination and migration guide. Preserve historical ADRs and do not restore an independent Terraform execution location here. Do not run terraform apply or terraform import. Source retirement and archival depend on the destination merge and verified state continuity.
